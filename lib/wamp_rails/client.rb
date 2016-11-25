@@ -1,9 +1,10 @@
 require 'thread'
+require 'wamp_client/connection'
 
 module WampRails
 
   class Client
-    attr_accessor :options, :wamp, :cmd_queue, :thread, :name
+    attr_accessor :options, :wamp, :cmd_queue, :thread, :name, :active, :verbose
     attr_accessor :registrations, :subscriptions
 
     # Called when the WAMP session presents a challenge
@@ -16,7 +17,7 @@ module WampRails
 
     # Returns true if the connection is active
     def is_active?
-      self.wamp.session&.is_open?
+      self.active
     end
 
     # Constructor for creating a client.  Options are
@@ -24,7 +25,7 @@ module WampRails
     # @option options [String] :name - The name of the WAMP Client
     # @option options [Array] :registrations - The different registrations
     # @option options [Array] :subscriptions - The different subscriptions
-    # @option options [Boolean] :test - Test mode
+    # @option options [WampClient::Connection] :wamp - Allows a different WAMP to be passed in
     # @option options [String] :uri The uri of the WAMP router to connect to
     # @option options [String] :realm The realm to connect to
     # @option options [String, nil] :protocol The protocol (default if wamp.2.json)
@@ -32,22 +33,23 @@ module WampRails
     # @option options [Array, nil] :authmethods The different auth methods that the client supports
     # @option options [Hash] :headers Custom headers to include during the connection
     # @option options [WampClient::Serializer::Base] :serializer The serializer to use (default is json)
-    def initialize(*options)
+    def initialize(options=nil)
       self.options = options || {}
       self.cmd_queue = Queue.new
-      self.registrations = options[:registrations] || []
-      self.subscriptions = options[:subscriptions] || []
-      self.name = options[:name] || 'default'
+      self.registrations = self.options[:registrations] || []
+      self.subscriptions = self.options[:subscriptions] || []
+      self.name = self.options[:name] || 'default'
+      self.wamp = self.options[:wamp] || WampClient::Connection.new(self.options)
+      self.verbose = self.options[:verbose]
 
-      # WAMP initialization.   Note that all callbacks are called on the
-      # reactor thread
-      self.wamp = WampClient::Connection.new(self.options)
+      # WAMP initialization.   Note that all callbacks are called on the reactor thread
       self.wamp.on_connect do
-        puts "WAMP Rails Client #{self.name} connection established"
+        puts "WAMP Rails Client #{self.name} connection established" if self.verbose
       end
 
       self.wamp.on_join do |session, details|
-        puts "WAMP Rails Client #{self.name} was established"
+        puts "WAMP Rails Client #{self.name} was established" if self.verbose
+        self.active = true
 
         # Register the procedures
         self.registrations.each do |registration|
@@ -61,33 +63,43 @@ module WampRails
       end
 
       self.wamp.on_leave do |reason, details|
-        puts "WAMP Rails Client #{self.name} left because '#{reason}'"
+        puts "WAMP Rails Client #{self.name} left because '#{reason}'" if self.verbose
+        self.active = false
       end
 
       self.wamp.on_disconnect do |reason|
-        puts "WAMP Rails Client #{self.name} disconnected because '#{reason}'"
+        puts "WAMP Rails Client #{self.name} disconnected because '#{reason}'" if self.verbose
+        self.active = false
       end
 
       self.wamp.on_challenge do |authmethod, extra|
         if @on_challenge
           @on_challenge.call(authmethod, extra)
         else
-          puts "WAMP Rails Client #{self.name} auth challenge was received but no method was implemented."
+          puts "WAMP Rails Client #{self.name} auth challenge was received but no method was implemented." if self.verbose
+          nil
         end
       end
 
       # Create the background thread
-      unless self.options[:test]
-        self.thread = Thread.new do
-          EM.tick_loop do
-            unless self.cmd_queue.empty?
-              command = self.cmd_queue.pop
-              self._execute_command(command)
-            end
+      self.thread = Thread.new do
+        EM.tick_loop do
+          unless self.cmd_queue.empty?
+            command = self.cmd_queue.pop
+            self._execute_command(command)
           end
-          self.wamp.open
         end
+        self.wamp.open
       end
+
+      # Catch SIGINT
+      Signal.trap('INT') { self.close }
+      Signal.trap('TERM') { self.close }
+    end
+
+    # Closes the connection
+    def close
+      self.wamp.close
     end
 
     #region WAMP Methods
@@ -108,7 +120,7 @@ module WampRails
 
     # Performs a WAMP register
     # @note This method is blocking if the callback is not nil
-    def register(procedure, klass, options, &callback)
+    def register(procedure, klass, options={}, &callback)
       command = WampRails::Command::Register.new(procedure, klass, options)
       self.registrations << command
       self._queue_command(command, callback)
@@ -116,7 +128,7 @@ module WampRails
 
     # Performs a WAMP subscribe
     # @note This method is blocking if the callback is not nil
-    def subscribe(topic, klass, options, &callback)
+    def subscribe(topic, klass, options={}, &callback)
       command = WampRails::Command::Subscribe.new(topic, klass, options)
       self.subscriptions << command
       self._queue_command(command, callback)
@@ -125,7 +137,6 @@ module WampRails
     #endregion
 
     #region Private Methods
-    private
 
     # Queues the command and blocks it the callback is not nil
     # @param [WampRails::Command::Base] - The command to queue
@@ -156,7 +167,7 @@ module WampRails
 
         command.execute(self.wamp.session)
       rescue Exception => e
-        command.callback(nil, WampClient::Session::CallError('wamp_rails.error', [e.to_s]), nil)
+        command.callback(nil, {error: 'wamp_rails.error', args: [e.to_s], kwargs: nil}, nil)
       end
     end
     #endregion

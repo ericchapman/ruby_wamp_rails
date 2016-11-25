@@ -1,3 +1,5 @@
+require 'wamp_rails'
+
 module WampRails
   module Controller
     class Subscribe < Base

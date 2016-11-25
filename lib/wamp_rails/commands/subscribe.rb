@@ -4,18 +4,20 @@ module WampRails
       attr_accessor :topic, :klass, :options
 
       def initialize(topic, klass, options)
-        super
+        super()
         self.topic = topic
         self.klass = klass
         self.options = options
 
-        unless self.klass.is_a? WampRails::Controller::Subscribe
+        unless self.klass < WampRails::Controller::Subscribe
           raise Exception.new('klass must be a WampRails::Controller::Subscribe class')
         end
       end
 
       def execute(session)
-        session.subscribe(self.topic, self.klass.singleton_method(:handler), self.options, self.callback)
+        session.subscribe(self.topic, self.klass.method(:handler), self.options) do |result, error, details|
+          self.callback(result, error, details)
+        end
       end
     end
   end

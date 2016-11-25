@@ -5,7 +5,7 @@ module WampRails
       attr_accessor :procedure, :args, :kwargs, :options
 
       def initialize(procedure, args, kwargs, options)
-        super
+        super()
         self.procedure = procedure
         self.args = args
         self.kwargs = kwargs
@@ -13,7 +13,9 @@ module WampRails
       end
 
       def execute(session)
-        session.call(self.procedure, self.args, self.kwargs, self.options, self.callback)
+        session.call(self.procedure, self.args, self.kwargs, self.options) do |result, error, details|
+          self.callback(result, error, details)
+        end
       end
 
     end

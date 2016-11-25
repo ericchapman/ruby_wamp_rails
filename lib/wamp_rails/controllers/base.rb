@@ -1,7 +1,7 @@
 module WampRails
   module Controller
     class Base
-      attr_accessor :args, :kwargs, :details, :session, :client
+      attr_accessor :args, :kwargs, :details, :session
 
       def self.handler(args, kwargs, details)
         object = self.new(args, kwargs, details)
@@ -35,9 +35,6 @@ module WampRails
         @session
       end
 
-      def client
-        @client
-      end
     end
   end
 end
