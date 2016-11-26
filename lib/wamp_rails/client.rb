@@ -41,6 +41,7 @@ module WampRails
       self.name = self.options[:name] || 'default'
       self.wamp = self.options[:wamp] || WampClient::Connection.new(self.options)
       self.verbose = self.options[:verbose]
+      self.active = false
 
       # WAMP initialization.   Note that all callbacks are called on the reactor thread
       self.wamp.on_connect do
@@ -165,6 +166,7 @@ module WampRails
 
         command.execute
       rescue Exception => e
+        puts e.to_s if self.verbose
         command.callback(nil, {error: 'wamp_rails.error', args: [e.to_s], kwargs: nil}, nil)
       end
     end
