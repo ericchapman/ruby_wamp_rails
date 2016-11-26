@@ -26,13 +26,15 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
 
 require 'wamp_rails/version'
-require 'wamp_rails/commands/base'
+require 'wamp_rails/error'
+require 'wamp_rails/commands/base_command'
+require 'wamp_rails/commands/base_handler'
 require 'wamp_rails/commands/call'
 require 'wamp_rails/commands/publish'
 require 'wamp_rails/commands/register'
 require 'wamp_rails/commands/subscribe'
-require 'wamp_rails/controllers/base'
-require 'wamp_rails/controllers/register'
-require 'wamp_rails/controllers/subscribe'
+require 'wamp_rails/controllers/base_controller'
+require 'wamp_rails/controllers/procedure'
+require 'wamp_rails/controllers/subscription'
 require 'wamp_rails/client'
 

@@ -107,30 +107,28 @@ module WampRails
     # Performs a WAMP call
     # @note This method is blocking if the callback is not nil
     def call(procedure, args=nil, kwargs=nil, options={}, &callback)
-      command = WampRails::Command::Call.new(procedure, args, kwargs, options)
+      command = WampRails::Command::Call.new(procedure, args, kwargs, options, self)
       self._queue_command(command, callback)
     end
 
     # Performs a WAMP publish
     # @note This method is blocking if the callback is not nil
     def publish(topic, args=nil, kwargs=nil, options={}, &callback)
-      command = WampRails::Command::Publish.new(topic, args, kwargs, options)
+      command = WampRails::Command::Publish.new(topic, args, kwargs, options, self)
       self._queue_command(command, callback)
     end
 
     # Performs a WAMP register
     # @note This method is blocking if the callback is not nil
     def register(procedure, klass, options={}, &callback)
-      command = WampRails::Command::Register.new(procedure, klass, options)
-      self.registrations << command
+      command = WampRails::Command::Register.new(procedure, klass, options, self)
       self._queue_command(command, callback)
     end
 
     # Performs a WAMP subscribe
     # @note This method is blocking if the callback is not nil
     def subscribe(topic, klass, options={}, &callback)
-      command = WampRails::Command::Subscribe.new(topic, klass, options)
-      self.subscriptions << command
+      command = WampRails::Command::Subscribe.new(topic, klass, options, self)
       self._queue_command(command, callback)
     end
 
@@ -162,10 +160,10 @@ module WampRails
     def _execute_command(command)
       begin
         unless self.is_active?
-          raise Exception.new("WAMP Rails Client #{self.name} is currently not active.")
+          raise WampRails::Error.new("WAMP Rails Client #{self.name} is currently not active.")
         end
 
-        command.execute(self.wamp.session)
+        command.execute
       rescue Exception => e
         command.callback(nil, {error: 'wamp_rails.error', args: [e.to_s], kwargs: nil}, nil)
       end

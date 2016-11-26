@@ -51,7 +51,7 @@ describe WampRails::Client do
 
     describe 'register' do
       it 'sends a register command' do
-        @client.register('test.procedure', WampRailsTest::TestRegisterController, {test: true}) do |result, error, details|
+        @client.register('test.procedure', WampRailsTest::TestProcedureController, {test: true}) do |result, error, details|
           expect(result.count).to eq(4)
           expect(result[0]).to eq('test.procedure')
           expect(error).to be_nil
@@ -59,7 +59,7 @@ describe WampRails::Client do
       end
 
       it 'processes an error' do
-        @client.register('test.procedure', WampRailsTest::TestRegisterController, {error: true}) do |result, error, details|
+        @client.register('test.procedure', WampRailsTest::TestProcedureController, {error: true}) do |result, error, details|
           expect(result).to be_nil
           expect(error[:error]).to eq('wamp_rails.error')
           expect(error[:args][0]).to eq('test exception')
@@ -72,13 +72,13 @@ describe WampRails::Client do
             expect(result).to be_nil
             expect(error[:error]).to eq('wamp_rails.error')
           end
-        }.to raise_exception(Exception)
+        }.to raise_exception(WampRails::Error)
       end
     end
 
     describe 'subscribe' do
       it 'sends a subscribe command' do
-        @client.subscribe('test.topic', WampRailsTest::TestSubscribeController, {test: true}) do |result, error, details|
+        @client.subscribe('test.topic', WampRailsTest::TestSubscriptionController, {test: true}) do |result, error, details|
           expect(result.count).to eq(3)
           expect(result[0]).to eq('test.topic')
           expect(error).to be_nil
@@ -86,7 +86,7 @@ describe WampRails::Client do
       end
 
       it 'processes an error' do
-        @client.subscribe('test.topic', WampRailsTest::TestSubscribeController, {error: true}) do |result, error, details|
+        @client.subscribe('test.topic', WampRailsTest::TestSubscriptionController, {error: true}) do |result, error, details|
           expect(result).to be_nil
           expect(error[:error]).to eq('wamp_rails.error')
           expect(error[:args][0]).to eq('test exception')
@@ -107,7 +107,7 @@ describe WampRails::Client do
 
       describe 'register' do
         it 'calls the controller' do
-          @client.register('test.procedure', WampRailsTest::TestRegisterController) do |result, error, details|
+          @client.register('test.procedure', WampRailsTest::TestProcedureController) do |result, error, details|
             @client.call('test.procedure', [4], {number: 5}) do |r, e, d|
               expect(r[0][0]).to eq(9)
             end
@@ -117,9 +117,9 @@ describe WampRails::Client do
 
       describe 'subscribe' do
         it 'calls the controller' do
-          @client.subscribe('test.topic', WampRailsTest::TestSubscribeController) do |results, error, deatils|
+          @client.subscribe('test.topic', WampRailsTest::TestSubscriptionController) do |results, error, deatils|
             @client.publish('test.topic', [5], {number:4}) do |r, e, d|
-              expect(WampRailsTest::TestSubscribeController.count).to eq(9)
+              expect(WampRailsTest::TestSubscriptionController.count).to eq(9)
             end
           end
         end

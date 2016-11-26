@@ -1,7 +1,7 @@
 module WampRails
   module Command
-    class Base
-      attr_accessor :queue
+    class BaseCommand
+      attr_accessor :queue, :client
 
       # The callback object to place in the queue
       class CallbackArgs
@@ -13,13 +13,19 @@ module WampRails
         end
       end
 
-      def initialize
+      def initialize(client)
         self.queue = Queue.new
+        self.client = client
       end
 
+      # Returns the session from the client
+      def session
+        self.client.wamp.session
+      end
+
+
       # Executes the command.  This is called by the library in the EM Thread
-      # @param session[WampClient::Session] - The wamp session
-      def execute(session)
+      def execute
         # Override when sub classing
       end
 

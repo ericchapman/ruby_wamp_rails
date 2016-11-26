@@ -1,21 +1,20 @@
 module WampRails
   module Command
-    class Subscribe < Base
+    class Subscribe < BaseHandler
       attr_accessor :topic, :klass, :options
 
-      def initialize(topic, klass, options)
-        super()
+      def initialize(topic, klass, options, client)
+        super(client, klass)
         self.topic = topic
-        self.klass = klass
         self.options = options
 
-        unless self.klass < WampRails::Controller::Subscribe
-          raise Exception.new('klass must be a WampRails::Controller::Subscribe class')
+        unless self.klass < WampRails::Controller::Subscription
+          raise WampRails::Error.new('klass must be a WampRails::Controller::Subscription class')
         end
       end
 
-      def execute(session)
-        session.subscribe(self.topic, self.klass.method(:handler), self.options) do |result, error, details|
+      def execute
+        session.subscribe(topic, handler, options) do |result, error, details|
           self.callback(result, error, details)
         end
       end
