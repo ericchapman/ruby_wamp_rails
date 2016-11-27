@@ -10,8 +10,8 @@ module WampRails
         }
       end
 
-      def initialize(client, klass)
-        super(client)
+      def initialize(queue, client, klass)
+        super(queue, client)
         self.klass = klass
       end
 

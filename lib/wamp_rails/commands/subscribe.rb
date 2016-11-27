@@ -3,8 +3,8 @@ module WampRails
     class Subscribe < BaseHandler
       attr_accessor :topic, :klass, :options
 
-      def initialize(topic, klass, options, client)
-        super(client, klass)
+      def initialize(queue, topic, klass, options, client)
+        super(queue, client, klass)
         self.topic = topic
         self.options = options
 
@@ -13,7 +13,7 @@ module WampRails
         end
       end
 
-      def execute
+      def execute(session)
         session.subscribe(topic, handler, options) do |result, error, details|
           self.callback(result, error, details)
         end

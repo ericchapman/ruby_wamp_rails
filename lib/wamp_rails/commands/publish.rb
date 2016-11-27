@@ -4,15 +4,15 @@ module WampRails
     class Publish < BaseCommand
       attr_accessor :topic, :args, :kwargs, :options
 
-      def initialize(topic, args, kwargs, options, client)
-        super(client)
+      def initialize(queue, topic, args, kwargs, options, client)
+        super(queue, client)
         self.topic = topic
         self.args = args
         self.kwargs = kwargs
         self.options = options
       end
 
-      def execute
+      def execute(session)
         session.publish(topic, args, kwargs, options) do |result, error, details|
           self.callback(result, error, details)
         end

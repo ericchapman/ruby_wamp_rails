@@ -3,8 +3,8 @@ module WampRails
     class Register < BaseHandler
       attr_accessor :procedure, :options
 
-      def initialize(procedure, klass, options, client)
-        super(client, klass)
+      def initialize(queue, procedure, klass, options, client)
+        super(queue, client, klass)
         self.procedure = procedure
         self.options = options
 
@@ -13,7 +13,7 @@ module WampRails
         end
       end
 
-      def execute
+      def execute(session)
         session.register(procedure, handler, options) do |result, error, details|
           self.callback(result, error, details)
         end

@@ -13,25 +13,19 @@ module WampRails
         end
       end
 
-      def initialize(client)
-        self.queue = Queue.new
+      def initialize(queue, client)
+        self.queue = queue
         self.client = client
       end
 
-      # Returns the session from the client
-      def session
-        self.client.wamp.session
-      end
-
-
       # Executes the command.  This is called by the library in the EM Thread
-      def execute
+      def execute(session)
         # Override when sub classing
       end
 
       # Used in sub-classes to handle the response
       def callback(result, error, details)
-        self.queue.push(CallbackArgs.new(result, error, details))
+        self.queue&.push(CallbackArgs.new(result, error, details))
       end
 
     end
