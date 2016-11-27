@@ -119,12 +119,14 @@ module WampRails
 
     # Adds a procedure to the client
     def add_procedure(procedure, klass, options=nil)
+      options ||= {}
       raise WampRails::Error.new('"add_procedure" must be called BEFORE "open"') if self.thread
       self.registrations << WampRails::Command::Register.new(procedure, klass, options, self)
     end
 
     # Adds a subscription to the client
     def add_subscription(topic, klass, options=nil)
+      options ||= {}
       raise WampRails::Error.new('"add_subscription" must be called BEFORE "open"') if self.thread
       self.subscriptions << WampRails::Command::Subscribe.new(topic, klass, options, self)
     end
