@@ -3,8 +3,12 @@ require 'spec_helper'
 describe WampRails::Client do
   before(:each) {
     @client = described_class.new({wamp: WampRailsTest::TestConnection.new({})})
-    until @client.is_active?
+    @client.routes do
+      add_procedure 'route.procedure', WampRailsTest::TestProcedureController
+      add_subscription 'route.topic', WampRailsTest::TestSubscriptionController
     end
+    @client.open
+    @client.wait_for_active
   }
 
   after(:each) {
@@ -107,20 +111,16 @@ describe WampRails::Client do
 
       describe 'register' do
         it 'calls the controller' do
-          @client.register('test.procedure', WampRailsTest::TestProcedureController) do |result, error, details|
-            @client.call('test.procedure', [4], {number: 5}) do |r, e, d|
-              expect(r[0][0]).to eq(9)
-            end
+          @client.call('route.procedure', [4], {number: 5}) do |r, e, d|
+            expect(r[0][0]).to eq(9)
           end
         end
       end
 
       describe 'subscribe' do
         it 'calls the controller' do
-          @client.subscribe('test.topic', WampRailsTest::TestSubscriptionController) do |results, error, deatils|
-            @client.publish('test.topic', [5], {number:4}) do |r, e, d|
-              expect(WampRailsTest::TestSubscriptionController.count).to eq(9)
-            end
+          @client.publish('route.topic', [5], {number:4}) do |r, e, d|
+            expect(WampRailsTest::TestSubscriptionController.count).to eq(9)
           end
         end
       end

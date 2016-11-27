@@ -23,6 +23,56 @@ This ensures that the Rails application does not need to worry about the thread.
 This however has the side effect where all calls to the library are executed
 synchronously (they will block the current thread) unless the callback is nil.
 
+## Initialize
+
+The client is initialized as shown below.  The options are the same as
+'wamp_client' with the addition of the 'name' option which is used for
+logging.
+
+``` ruby
+options = {
+  name: 'main router',
+  uri: 'ws://router.example.com,
+  realm: 'realm1'
+}
+
+wamp_client = WampRails::Client.new(options)
+wamp_client.open
+```
+
+## Routes
+
+Routes are created using the 'routes' block.  This must be called BEFORE
+'open'.  Below is an example
+
+``` ruby
+options = {
+  uri: 'ws://router.example.com,
+  realm: 'realm1'
+}
+
+wamp_client = WampRails::Client.new(options)
+
+# Configure the Routes
+wamp_client.routes do
+  add_subscription 'topic', MySubscriptionClass
+  add_subscription 'topic.*', MyWildcardSubscriptionClass, {wildcard: true}
+  
+  add_procedure 'procedure.', MyPrefixProcedureClass, {prefix: true}
+end
+
+wamp_client.open
+```
+
+When 'routes' is used, the client object will automatically re-register/subscribe
+to the procedures/topics on reconnect.  Otherwise if 'register' or 'subscribe'
+are going to be called directly, then the system must wait for the connection
+to become active by calling
+
+``` ruby
+wamp_client.wait_for_active
+```
+
 ## Commands
 
 The client currently supports the following commands from the WampClient library

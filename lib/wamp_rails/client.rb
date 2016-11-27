@@ -20,11 +20,15 @@ module WampRails
       self.active
     end
 
+    # Waits for the session to become active
+    def wait_for_active
+      until self.is_active?
+      end
+    end
+
     # Constructor for creating a client.  Options are
     # @param options [Hash] The different options to pass to the connection
     # @option options [String] :name - The name of the WAMP Client
-    # @option options [Array] :registrations - The different registrations
-    # @option options [Array] :subscriptions - The different subscriptions
     # @option options [WampClient::Connection] :wamp - Allows a different WAMP to be passed in
     # @option options [String] :uri The uri of the WAMP router to connect to
     # @option options [String] :realm The realm to connect to
@@ -36,8 +40,8 @@ module WampRails
     def initialize(options=nil)
       self.options = options || {}
       self.cmd_queue = Queue.new
-      self.registrations = self.options[:registrations] || []
-      self.subscriptions = self.options[:subscriptions] || []
+      self.registrations = []
+      self.subscriptions = []
       self.name = self.options[:name] || 'default'
       self.wamp = self.options[:wamp] || WampClient::Connection.new(self.options)
       self.verbose = self.options[:verbose]
@@ -82,6 +86,13 @@ module WampRails
         end
       end
 
+      # Catch SIGINT
+      Signal.trap('INT') { self.close }
+      Signal.trap('TERM') { self.close }
+    end
+
+    # Opens the connection
+    def open
       # Create the background thread
       self.thread = Thread.new do
         EM.tick_loop do
@@ -92,16 +103,33 @@ module WampRails
         end
         self.wamp.open
       end
-
-      # Catch SIGINT
-      Signal.trap('INT') { self.close }
-      Signal.trap('TERM') { self.close }
     end
 
     # Closes the connection
     def close
       self.wamp.close
     end
+
+    #region Route Methods
+
+    # Used to configure the routes for the client
+    def routes(&block)
+      self.instance_eval(&block)
+    end
+
+    # Adds a procedure to the client
+    def add_procedure(procedure, klass, options=nil)
+      raise WampRails::Error.new('"add_procedure" must be called BEFORE "open"') if self.thread
+      self.registrations << WampRails::Command::Register.new(procedure, klass, options, self)
+    end
+
+    # Adds a subscription to the client
+    def add_subscription(topic, klass, options=nil)
+      raise WampRails::Error.new('"add_subscription" must be called BEFORE "open"') if self.thread
+      self.subscriptions << WampRails::Command::Subscribe.new(topic, klass, options, self)
+    end
+
+    #endregion
 
     #region WAMP Methods
 
