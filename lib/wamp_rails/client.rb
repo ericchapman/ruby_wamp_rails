@@ -107,7 +107,11 @@ module WampRails
 
     # Closes the connection
     def close
-      self.wamp.close
+      begin
+        self.wamp.close
+      rescue Exception => e
+        puts "WAMP Rails #{name} exception while closing #{e.to_s}"
+      end
     end
 
     #region Route Methods

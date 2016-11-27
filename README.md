@@ -1,7 +1,7 @@
 # WampRails
 
 [![Gem Version](https://badge.fury.io/rb/wamp_rails.svg)](https://badge.fury.io/rb/wamp_rails)
-[![Circle CI](https://circleci.com/gh/ericchapman/ruby_wamp_rails/tree/master.svg?&style=shield&circle-token=92813c17f9c9510c4c644e41683e7ba2572e0b2a)](https://circleci.com/gh/ericchapman/ruby_wamp_rails/tree/master)
+[![Circle CI](https://circleci.com/gh/ericchapman/ruby_wamp_rails/tree/master.svg?&style=shield&circle-token=87db2e55d2e79a174739f61f7ce42c1351533598)](https://circleci.com/gh/ericchapman/ruby_wamp_rails/tree/master)
 [![Codecov](https://img.shields.io/codecov/c/github/ericchapman/ruby_wamp_rails/master.svg)](https://codecov.io/github/ericchapman/ruby_wamp_rails)
 
 This library allows the GEM [wamp_client](https://github.com/ericchapman/ruby_wamp_client) 
