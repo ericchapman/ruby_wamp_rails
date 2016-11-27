@@ -1,5 +1,9 @@
 # WampRails
 
+[![Gem Version](https://badge.fury.io/rb/wamp_rails.svg)](https://badge.fury.io/rb/wamp_rails)
+[![Circle CI](https://circleci.com/gh/ericchapman/ruby_wamp_rails/tree/master.svg?&style=shield&circle-token=92813c17f9c9510c4c644e41683e7ba2572e0b2a)](https://circleci.com/gh/ericchapman/ruby_wamp_rails/tree/master)
+[![Codecov](https://img.shields.io/codecov/c/github/ericchapman/ruby_wamp_rails/master.svg)](https://codecov.io/github/ericchapman/ruby_wamp_rails)
+
 This library allows the GEM [wamp_client](https://github.com/ericchapman/ruby_wamp_client) 
 to be integrated into a Rails application.
 
@@ -23,7 +27,32 @@ This ensures that the Rails application does not need to worry about the thread.
 This however has the side effect where all calls to the library are executed
 synchronously (they will block the current thread) unless the callback is nil.
 
-## Initialize
+## Revision History
+
+ - v0.0.2:
+   - Added 'routes' to the client
+ - v0.0.1:
+   - Initial Revision
+
+## Installation
+
+Add this line to your application's Gemfile:
+
+```ruby
+gem 'wamp_rails'
+```
+
+And then execute:
+
+    $ bundle
+
+Or install it yourself as:
+
+    $ gem install wamp_rails
+
+## Usage
+
+### Connection
 
 The client is initialized as shown below.  The options are the same as
 'wamp_client' with the addition of the 'name' option which is used for
@@ -40,7 +69,75 @@ wamp_client = WampRails::Client.new(options)
 wamp_client.open
 ```
 
-## Routes
+### Commands
+
+The client currently supports the following commands from the WampClient library
+
+ - call
+ - publish
+ - register
+ - subscribe
+ 
+The methods have the same parameters as the WampClient library
+
+### Controllers
+
+The 'register' and 'subscribe' commands require 'handlers' to be implemented.
+In order to ensure thread safety and consistency with Rails, the handlers
+are implemented as 'controller' classes.
+
+When a call or publish is received, the library will instantiate the supplied
+class with following methods available
+
+ - args (Array) - The arguments
+ - kwargs (Hash) - The keyword arguments
+ - details (Hash) - The details
+ - client [WampRails::Client) - The client.  This can be used if the 
+   handler needs to send a Wamp message
+
+#### Procedure
+To create a register controller, create a class that subclasses from
+'WampRails::Controller::Procedure' and implements 'handler'.  See below
+
+``` ruby
+class MyRegisterController < WampRails:::Controller::Procedure
+
+  def handler
+    the_args = self.args
+    the_kwargs = self.kwargs
+    the_details = self.details
+    the_client = self.client
+   
+    # Do Something
+   
+    # Return the result (see WampClient for more details on implementing procedures)
+    true
+  end
+
+end
+```
+
+#### Subscription
+To create a subscribe controller, create a class that subclasses from
+'WampRails::Controller::Subscription' and implements 'handler'.  See below
+
+``` ruby
+class MySubscribeController < WampRails:::Controller::Subscription
+
+  def handler
+    the_args = self.args
+    the_kwargs = self.kwargs
+    the_details = self.details
+    the_client = self.client
+   
+    # Do Something
+   
+  end
+
+end
+```
+
+#### Routes
 
 Routes are created using the 'routes' block.  This must be called BEFORE
 'open'.  Below is an example
@@ -73,70 +170,3 @@ to become active by calling
 wamp_client.wait_for_active
 ```
 
-## Commands
-
-The client currently supports the following commands from the WampClient library
-
- - call
- - publish
- - register
- - subscribe
- 
-The methods have the same parameters as the WampClient library
-
-## Controllers
-
-The 'register' and 'subscribe' commands require 'handlers' to be implemented.
-In order to ensure thread safety and consistency with Rails, the handlers
-are implemented as 'controller' classes.
-
-When a call or publish is received, the library will instantiate the supplied
-class with following methods available
-
- - args (Array) - The arguments
- - kwargs (Hash) - The keyword arguments
- - details (Hash) - The details
- - client [WampRails::Client) - The client.  This can be used if the 
-   handler needs to send a Wamp message
-
-### Register
-To create a register controller, create a class that subclasses from
-'WampRails::Controller::Procedure' and implements 'handler'.  See below
-
-``` ruby
-class MyRegisterController < WampRails:::Controller::Procedure
-
-  def handler
-    the_args = self.args
-    the_kwargs = self.kwargs
-    the_details = self.details
-    the_client = self.client
-   
-    # Do Something
-   
-    # Return the result (see WampClient for more details on implementing procedures)
-    true
-  end
-
-end
-```
-
-### Subscribe
-To create a subscribe controller, create a class that subclasses from
-'WampRails::Controller::Subscription' and implements 'handler'.  See below
-
-``` ruby
-class MySubscribeController < WampRails:::Controller::Subscription
-
-  def handler
-    the_args = self.args
-    the_kwargs = self.kwargs
-    the_details = self.details
-    the_client = self.client
-   
-    # Do Something
-   
-  end
-
-end
-```
