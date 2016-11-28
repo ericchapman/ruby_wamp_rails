@@ -1,17 +1,7 @@
 module WampRails
   module Client
-    class BaseClient
-      attr_accessor :verbose, :name
 
-      # Constructor for creating a client.  Options are
-      # @param options [Hash] The different options to pass to the connection
-      # @option options [String] :name - The name of the WAMP Client
-      # @option options [Boolean] :verbose - True if you want debug messages printed
-      def initialize(options=nil)
-        options ||= {}
-        self.name = options[:name] || 'default'
-        self.verbose = options[:verbose]
-      end
+    class Base
 
       #region WAMP Methods
 
@@ -69,6 +59,24 @@ module WampRails
       end
 
       #endregion
+
     end
+
+    class Thread < Base
+
+      def initialize(cmd_queue)
+        @cmd_queue = cmd_queue
+      end
+
+      def cmd_queue
+        @cmd_queue
+      end
+
+      def response_queue
+        WampRails::Queue::Thread.new
+      end
+
+    end
+
   end
 end

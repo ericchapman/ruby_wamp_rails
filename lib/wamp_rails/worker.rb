@@ -3,7 +3,8 @@ require 'wamp_client/connection'
 
 module WampRails
   module Worker
-    class BaseWorker
+
+    class Base
       attr_accessor :options, :wamp, :name, :active, :verbose
       attr_accessor :registrations, :subscriptions
 
@@ -110,10 +111,6 @@ module WampRails
         end
       end
 
-      def cmd_queue
-        # Override in subclass
-      end
-
       #region Route Methods
 
       # Used to configure the routes for the client
@@ -125,18 +122,17 @@ module WampRails
       def add_procedure(procedure, klass, options=nil)
         options ||= {}
         raise WampRails::Error.new('"add_procedure" must be called BEFORE the connection is active') if self.is_active?
-        self.registrations << WampRails::Command::Register.new(nil, procedure, klass, options, self)
+        self.registrations << WampRails::Command::Register.new(nil, procedure, klass, options, new_client)
       end
 
       # Adds a subscription to the client
       def add_subscription(topic, klass, options=nil)
         options ||= {}
         raise WampRails::Error.new('"add_subscription" must be called BEFORE the connection is active') if self.is_active?
-        self.subscriptions << WampRails::Command::Subscribe.new(nil, topic, klass, options, self)
+        self.subscriptions << WampRails::Command::Subscribe.new(nil, topic, klass, options, new_client)
       end
 
       #endregion
-
 
       #region Private Methods
 
@@ -156,7 +152,41 @@ module WampRails
       end
       #endregion
 
+      #region Override Methods
+
+      def new_client
+        # Override me to return a new client for the worker
+      end
+
+      def cmd_queue
+        # Override in subclass to return a command queue object
+      end
+
+      #endregion
+
     end
 
+    class Thread < Base
+      attr_accessor :thread
+
+      def initialize(options)
+        super(options)
+        @cmd_queue = WampRails::Queue::Thread.new
+      end
+
+      def new_client
+        WampRails::Client::Thread.new(cmd_queue)
+      end
+
+      def cmd_queue
+        @cmd_queue
+      end
+
+      def open
+        self.thread = ::Thread.new do
+          super()
+        end
+      end
+    end
   end
 end

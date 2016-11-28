@@ -1,6 +1,7 @@
 module WampRails
   module Controller
-    class BaseController
+
+    class Base
 
       def initialize(args, kwargs, details, client)
         @args = args || []
@@ -30,5 +31,14 @@ module WampRails
       end
 
     end
+
+    class Procedure < Base
+
+    end
+
+    class Subscription < Base
+
+    end
+
   end
 end

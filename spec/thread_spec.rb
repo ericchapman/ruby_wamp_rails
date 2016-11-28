@@ -1,15 +1,15 @@
 require 'spec_helper'
 
-describe WampRails::Client::ThreadClient do
+describe WampRails::Worker::Thread do
   before(:all) {
-    @worker = WampRails::Worker::ThreadWorker.new({wamp: WampRailsTest::TestConnection.new({})})
+    @worker = described_class.new({wamp: WampRailsTest::TestConnection.new({})})
     @worker.routes do
       add_procedure 'route.procedure', WampRailsTest::TestProcedureController
       add_subscription 'route.topic', WampRailsTest::TestSubscriptionController
     end
     @worker.open
     @worker.wait_for_active
-    @client = WampRails::Client::ThreadClient.new(@worker, {})
+    @client = @worker.new_client
   }
 
   after(:all) {
