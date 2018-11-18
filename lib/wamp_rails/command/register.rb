@@ -1,6 +1,8 @@
+require_relative "handler"
+
 module WampRails
   module Command
-    class Register < BaseHandler
+    class Register < Handler
       attr_accessor :procedure, :options
 
       def initialize(procedure, klass, options, client)

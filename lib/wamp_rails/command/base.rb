@@ -1,6 +1,6 @@
 module WampRails
   module Command
-    class BaseCommand
+    class Base
       attr_accessor :queue, :client
 
       # The callback object to place in the queue

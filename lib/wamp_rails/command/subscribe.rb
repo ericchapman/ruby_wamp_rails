@@ -1,6 +1,8 @@
+require_relative "handler"
+
 module WampRails
   module Command
-    class Subscribe < BaseHandler
+    class Subscribe < Handler
       attr_accessor :topic, :klass, :options
 
       def initialize(topic, klass, options, client)

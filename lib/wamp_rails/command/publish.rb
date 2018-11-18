@@ -1,7 +1,8 @@
+require_relative 'base'
+
 module WampRails
   module Command
-
-    class Publish < BaseCommand
+    class Publish < Base
       attr_accessor :topic, :args, :kwargs, :options
 
       def initialize(topic, args, kwargs, options, client)

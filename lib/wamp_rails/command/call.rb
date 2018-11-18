@@ -1,7 +1,8 @@
+require_relative 'base'
+
 module WampRails
   module Command
-
-    class Call < BaseCommand
+    class Call < Base
       attr_accessor :procedure, :args, :kwargs, :options
 
       def initialize(procedure, args, kwargs, options, client)

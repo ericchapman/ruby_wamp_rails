@@ -1,6 +1,8 @@
+require_relative 'base'
+
 module WampRails
   module Command
-    class BaseHandler < BaseCommand
+    class Handler < Base
       attr_accessor :klass
 
       def handler
